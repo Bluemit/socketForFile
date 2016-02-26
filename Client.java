@@ -11,29 +11,33 @@ public class Client {
 class WriteData extends Thread {            
     @Override
     public void run() {
-        Socket mSocket = new Socket();
-        try {
-            mSocket.connect(new InetSocketAddress("localhost",30000),1000);
-        }   catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            PrintWriter os = new PrintWriter(mSocket.getOutputStream());
-            BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        while (true) {
+            Socket mSocket = new Socket();
+            try {
+                mSocket.connect(new InetSocketAddress("localhost",30000),1000);
+                PrintWriter os = new PrintWriter(mSocket.getOutputStream());
+                BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 
-            new ReadData(mSocket).start();
+                new ReadData(mSocket).start();
 
-            String line = in.readLine();
-            while (!line.equals("exit")) {
-            	os.println(line);
-            	os.flush();
-            	line = in.readLine();
+                String line = in.readLine();
+                while (!line.equals("exit")) {
+                    os.println(line);
+                    os.flush();
+                    line = in.readLine();
+                }
+                os.close();
+                mSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            os.close();
-            mSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            try {
+                Thread.sleep(10000);
+            } catch (Exception e) {
+                e.printStackTrace();
+                break;
+            }
+        } 
     } 
 }
 
