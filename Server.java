@@ -1,4 +1,4 @@
-
+import java.text.SimpleDateFormat;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -27,8 +27,9 @@ class AcceptThread extends Thread {
             try {
                 mSocket = mServerSocket.accept();
                 System.out.println("Thread " + ++i);
-                Runnable r = new ConnectThread(mSocket);
+                Runnable r = new ReadThread(mSocket);
                 new Thread(r).start();
+                new WriteThread(mSocket).start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -36,10 +37,10 @@ class AcceptThread extends Thread {
     }
 }
 
-class ConnectThread implements Runnable {
+class ReadThread implements Runnable {
     private Socket mmSocket;
 
-    ConnectThread(Socket i) {
+    ReadThread(Socket i) {
         mmSocket = i;
     }
 
@@ -47,17 +48,11 @@ class ConnectThread implements Runnable {
         try {
             try {
                 BufferedReader is = new BufferedReader(new InputStreamReader(mmSocket.getInputStream()));
-                PrintWriter os = new PrintWriter(mmSocket.getOutputStream());
-                BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-
-                System.out.println("Client: " + is.readLine());
-                String line = in.readLine();
-                while (!line.equals("bye")) {
-                    os.println(line);
-                    os.flush();
-                    System.out.println("Server: " + line);
-                    System.out.println("Client: " + is.readLine());
-                    line = in.readLine();
+                
+                String line = is.readLine();
+                while (!line.equals("exit")) {
+                    System.out.println("Client: " + line);
+                    line = is.readLine();
                 }
             } finally {
                 mmSocket.close();
@@ -68,6 +63,25 @@ class ConnectThread implements Runnable {
     }
 }
 
-class Transfer extends Thread {
+class WriteThread extends Thread {
+    private Socket mmSocket;
 
+    WriteThread(Socket i) {
+        mmSocket = i;
+    }
+
+    public void run() {
+        while (true) {
+            try {
+                PrintWriter os = new PrintWriter(mmSocket.getOutputStream());
+                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                os.println(df.format(new Date()));
+                os.flush();
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
+

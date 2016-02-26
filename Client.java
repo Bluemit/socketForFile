@@ -4,11 +4,11 @@ import java.util.*;
 
 public class Client {
         public static void main(String []args) {
-                new AcceptData().start();
+                new WriteData().start();
         }
 }
 
-class AcceptData extends Thread{            
+class WriteData extends Thread {            
     @Override
     public void run() {
         Socket mSocket = new Socket();
@@ -19,22 +19,42 @@ class AcceptData extends Thread{
         }
         try {
             PrintWriter os = new PrintWriter(mSocket.getOutputStream());
-            BufferedReader is = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 
+            new ReadData(mSocket).start();
+
             String line = in.readLine();
-            while (!line.equals("bye")) {
+            while (!line.equals("exit")) {
             	os.println(line);
             	os.flush();
-            	System.out.println("Client: " + line);
-            	System.out.println("Server: " + is.readLine());
             	line = in.readLine();
             }
             os.close();
-            is.close();
             mSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     } 
+}
+
+class ReadData extends Thread {
+	private Socket mSocket;
+
+	ReadData(Socket i) {
+		mSocket = i;
+	}
+
+	public void run() {
+		try {
+			BufferedReader is = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
+			String line = is.readLine();
+			while (!line.equals("exit")) {
+				System.out.println("Server: " + line);
+				line = is.readLine();
+			}
+			is.close();
+		} catch (IOException e) {
+            e.printStackTrace();
+        }
+	}
 }
