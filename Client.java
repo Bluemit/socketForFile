@@ -14,6 +14,7 @@ class WriteData extends Thread {
         while (true) {
             Socket mSocket = new Socket();
             try {
+                mSocket.setSoTimeout(5000);
                 mSocket.connect(new InetSocketAddress("localhost",30000),1000);
                 PrintWriter os = new PrintWriter(mSocket.getOutputStream());
                 BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -28,8 +29,9 @@ class WriteData extends Thread {
                 }
                 os.close();
                 mSocket.close();
+                System.out.println("Exit Client WriteData");
                 break;
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             try {
@@ -38,7 +40,8 @@ class WriteData extends Thread {
                 e.printStackTrace();
                 break;
             }
-        } 
+        }
+
     } 
 }
 
@@ -58,8 +61,10 @@ class ReadData extends Thread {
 				line = is.readLine();
 			}
 			is.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            System.out.println("Exit Client ReadData");
         }
 	}
 }

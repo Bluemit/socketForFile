@@ -45,7 +45,7 @@ class ReadThread implements Runnable {
     }
 
     public void run() {
-        try {
+
             try {
                 BufferedReader is = new BufferedReader(new InputStreamReader(mmSocket.getInputStream()));
                 
@@ -54,12 +54,18 @@ class ReadThread implements Runnable {
                     System.out.println("Client: " + line);
                     line = is.readLine();
                 }
-            } finally {
+            } catch (Exception e) {
+            e.printStackTrace();
+            } 
+            finally { 
+System.out.println("Exit Server ReadData");
+                try {
                 mmSocket.close();
             }
-        } catch (IOException e) {
+                catch (IOException e) {
             e.printStackTrace();
-        }
+            } 
+            }
     }
 }
 
@@ -83,6 +89,7 @@ class WriteThread extends Thread {
                 break;
             }
         }
+        System.out.println("Exit Server WriteData");
     }
 }
 
