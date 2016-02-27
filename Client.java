@@ -28,6 +28,7 @@ class WriteData extends Thread {
                 }
                 os.close();
                 mSocket.close();
+                break;
             } catch (IOException e) {
                 e.printStackTrace();
             }
