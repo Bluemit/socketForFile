@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import sun.misc.*;
 
 public class Client {
         public static void main(String []args) {
@@ -8,7 +9,7 @@ public class Client {
         }
 }
 
-class WriteData extends Thread {            
+class WriteData extends Thread {
     @Override
     public void run() {
         while (true) {
@@ -42,11 +43,12 @@ class WriteData extends Thread {
             }
         }
 
-    } 
+    }
 }
 
 class ReadData extends Thread {
 	private Socket mSocket;
+  static BASE64Decoder decoder = new sun.misc.BASE64Decoder();
 
 	ReadData(Socket i) {
 		mSocket = i;
@@ -55,11 +57,29 @@ class ReadData extends Thread {
 	public void run() {
 		try {
 			BufferedReader is = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
-			String line = is.readLine();
-			while (!line.equals("exit")) {
-				System.out.println("Server: " + line);
-				line = is.readLine();
-			}
+			// String line = is.readLine();
+      File file = new File("2.pdf");
+      FileOutputStream fos =
+                  new FileOutputStream(file);
+      char [] allChar = new char[20000000];
+      String allLine = "";
+      int len = is.read(allChar);
+      System.out.println(len + " chars!");
+      allLine = String.valueOf(allChar);
+      System.out.println(allLine.length() + " long strings!");
+      int cnt = 0;
+			// while (line != null) {
+      //   cnt += 1;
+      //   allLine += line;
+      //   // byte filebyte[] = getFromBase64(line).getBytes();
+      //   // fos.write(filebyte);
+      //   System.out.println("writing..." + line);
+			// 	// System.out.println("Server: " + line);
+			// 	line = is.readLine();
+			// }
+      base64StringToPDF(allLine, file);
+      System.out.println("write ok");
+      fos.close();
 			is.close();
 		} catch (Exception e) {
             e.printStackTrace();
@@ -67,4 +87,44 @@ class ReadData extends Thread {
             System.out.println("Exit Client ReadData");
         }
 	}
+
+  static void base64StringToPDF(String base64sString, File file){
+        BufferedInputStream bin = null;
+        FileOutputStream fout = null;
+        BufferedOutputStream bout = null;
+        try {
+
+            byte[] bytes = decoder.decodeBuffer(base64sString);
+
+            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+
+            bin = new BufferedInputStream(bais);
+
+            fout  = new FileOutputStream(file);
+
+            bout = new BufferedOutputStream(fout);
+
+            byte[] buffers = new byte[1024];
+            int len = bin.read(buffers);
+            while(len != -1){
+                bout.write(buffers, 0, len);
+                len = bin.read(buffers);
+            }
+
+            bout.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally{
+            try {
+                bin.close();
+                fout.close();
+                bout.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
 }

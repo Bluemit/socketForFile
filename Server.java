@@ -2,6 +2,7 @@ import java.text.SimpleDateFormat;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import sun.misc.*;
 
 public class Server {
     public static void main(String args[]) {
@@ -48,7 +49,7 @@ class ReadThread implements Runnable {
 
             try {
                 BufferedReader is = new BufferedReader(new InputStreamReader(mmSocket.getInputStream()));
-                
+
                 String line = is.readLine();
                 while (!line.equals("exit")) {
                     System.out.println("Client: " + line);
@@ -56,21 +57,22 @@ class ReadThread implements Runnable {
                 }
             } catch (Exception e) {
             e.printStackTrace();
-            } 
-            finally { 
+            }
+            finally {
 System.out.println("Exit Server ReadData");
                 try {
                 mmSocket.close();
             }
                 catch (IOException e) {
             e.printStackTrace();
-            } 
+            }
             }
     }
 }
 
 class WriteThread extends Thread {
     private Socket mmSocket;
+    static BASE64Encoder encoder = new sun.misc.BASE64Encoder();
 
     WriteThread(Socket i) {
         mmSocket = i;
@@ -80,10 +82,16 @@ class WriteThread extends Thread {
         while (true) {
             try {
                 PrintWriter os = new PrintWriter(mmSocket.getOutputStream());
-                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                os.println(df.format(new Date()));
+                // SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                // os.println(df.format(new Date()));
+                // os.flush();
+
+                File file = new File("1.pdf");
+                String result = getPDFBinary(file);
+                System.out.println(result);
+                os.println(result);
                 os.flush();
-                Thread.sleep(1000);
+                Thread.sleep(10000);
             } catch (Exception e) {
                 e.printStackTrace();
                 break;
@@ -91,5 +99,55 @@ class WriteThread extends Thread {
         }
         System.out.println("Exit Server WriteData");
     }
-}
 
+    static String getPDFBinary(File file) {
+        FileInputStream fin =null;
+        BufferedInputStream bin =null;
+        ByteArrayOutputStream baos = null;
+        BufferedOutputStream bout =null;
+        try {
+
+            fin = new FileInputStream(file);
+
+            bin = new BufferedInputStream(fin);
+            
+            baos = new ByteArrayOutputStream();
+
+            bout = new BufferedOutputStream(baos);
+            byte[] buffer = new byte[1024];
+            int len = bin.read(buffer);
+            while(len != -1){
+                bout.write(buffer, 0, len);
+                len = bin.read(buffer);
+            }
+
+            bout.flush();
+             byte[] bytes = baos.toByteArray();
+
+             return encoder.encodeBuffer(bytes).trim();
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally{
+            try {
+                fin.close();
+                bin.close();
+
+                //baos.close();
+                bout.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+
+
+
+
+
+}
