@@ -62,21 +62,12 @@ class ReadData extends Thread {
       FileOutputStream fos =
                   new FileOutputStream(file);
       char [] allChar = new char[20000000];
-      String allLine = "";
       int len = is.read(allChar);
       System.out.println(len + " chars!");
-      allLine = String.valueOf(allChar);
+      String allLine = new String (allChar, 0, len);
       System.out.println(allLine.length() + " long strings!");
       int cnt = 0;
-			// while (line != null) {
-      //   cnt += 1;
-      //   allLine += line;
-      //   // byte filebyte[] = getFromBase64(line).getBytes();
-      //   // fos.write(filebyte);
-      //   System.out.println("writing..." + line);
-			// 	// System.out.println("Server: " + line);
-			// 	line = is.readLine();
-			// }
+
       base64StringToPDF(allLine, file);
       System.out.println("write ok");
       fos.close();
