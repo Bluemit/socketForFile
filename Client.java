@@ -5,13 +5,8 @@ import sun.misc.*;
 
 public class Client {
     public static void main(String []args) {
-		if (args.length < 2) {
-			System.out.println("you don't set host and port");
-			return;
-		}
-		String host = args[0];
-		int port = Integer.valueOf(args[1]);
-		new WriteData(host, port).start();
+		System.out.println("Client starts.");
+		new WriteData().start();
     }
 }
 
@@ -19,35 +14,34 @@ class WriteData extends Thread {
     String threadhost;
 	int threadport;
 
-	WriteData(String host, int port) {
-		threadhost = host;
-		threadport = port;
+	WriteData() {
 	}
 
 	@Override
     public void run() {
         while (true) {
-            Socket mSocket = new Socket();
+            Socket mSocket = null;
             try {
-                mSocket.setSoTimeout(50000);
-				mSocket.connect(new InetSocketAddress(threadhost, threadport),1000);
-                PrintWriter os = new PrintWriter(mSocket.getOutputStream());
-                BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-
+                PrintWriter os = null;
+				BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 
                 String line = in.readLine();
-                while (!line.equals("exit")) {
-					if(line.equals("ask")){
-						new ReadData(mSocket).start();
+				String[] lineargs = line.split(" ");
+                while (!lineargs[0].equals("exit")) {
+					if(lineargs[0].equals("ask")){
+						if(lineargs.length < 4) {
+							System.out.println("args are not enough!");
+							line = in.readLine();
+							continue;
+						}
+						mSocket = new Socket();
+						mSocket.setSoTimeout(50000);
+						mSocket.connect(new InetSocketAddress(lineargs[1], Integer.valueOf(lineargs[2])), 1000);
+						new ReadData(mSocket, lineargs[3]).start();
+						os = new PrintWriter(mSocket.getOutputStream());
+						os.println(lineargs[0]);
+						os.flush();
 					}
-					os = new PrintWriter(mSocket.getOutputStream());
-                    os.println(line);
-                    os.flush();
-					sleep(5000);
-	
-					mSocket = new Socket();
-					mSocket.setSoTimeout(50000);
-					mSocket.connect(new InetSocketAddress(threadhost, threadport),1000);
                     line = in.readLine();
                 }
                 os.close();
@@ -70,10 +64,12 @@ class WriteData extends Thread {
 
 class ReadData extends Thread {
 	private Socket mSocket;
+	private String mFilepath;
 	static BASE64Decoder decoder = new sun.misc.BASE64Decoder();
 
-	ReadData(Socket i) {
+	ReadData(Socket i, String s) {
 		mSocket = i;
+		mFilepath = s;
 	}
 
 	public void run() {
@@ -81,8 +77,7 @@ class ReadData extends Thread {
 		try {
 				BufferedReader is = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
 				
-				// String line = is.readLine();
-				File file = new File("2.pdf");
+				File file = new File(mFilepath);
 				FileOutputStream fos = new FileOutputStream(file);
 				char [] allChar = new char[20000000];
 				int len = is.read(allChar);

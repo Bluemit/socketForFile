@@ -34,13 +34,18 @@ class WriteData extends Thread {
 				String[] lineargs = line.split(" ");
                 while (!lineargs[0].equals("exit")) {
 					if(lineargs[0].equals("ask")){
-					mSocket = new Socket();
-					mSocket.setSoTimeout(50000);
-					mSocket.connect(new InetSocketAddress(lineargs[1], Integer.valueOf(lineargs[2])), 1000);
-					new ReceiveData(mSocket).start();
-					os = new PrintWriter(mSocket.getOutputStream());
-                    os.println(lineargs[0]);
-                    os.flush();
+						if(lineargs.length < 4) {
+							System.out.println("args are not enough!");
+							line = in.readLine();
+							continue;
+						}
+						mSocket = new Socket();
+						mSocket.setSoTimeout(50000);
+						mSocket.connect(new InetSocketAddress(lineargs[1], Integer.valueOf(lineargs[2])), 1000);
+						new ReceiveData(mSocket, lineargs[3]).start();
+						os = new PrintWriter(mSocket.getOutputStream());
+						os.println(lineargs[0]);
+						os.flush();
 					}
 					sleep(1000);
 					line = in.readLine();
@@ -65,10 +70,12 @@ class WriteData extends Thread {
 
 class ReceiveData extends Thread {
 	private Socket mSocket;
+	private String mFilepath;
 	static BASE64Decoder decoder = new sun.misc.BASE64Decoder();
 
-	ReceiveData(Socket i) {
+	ReceiveData(Socket i, String s) {
 		mSocket = i;
+		mFilepath = s;
 	}
 
 	public void run() {
@@ -76,8 +83,7 @@ class ReceiveData extends Thread {
 		try {
 				BufferedReader is = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
 				
-				// String line = is.readLine();
-				File file = new File("2.pdf");
+				File file = new File(mFilepath);
 				FileOutputStream fos = new FileOutputStream(file);
 				char [] allChar = new char[20000000];
 				int len = is.read(allChar);

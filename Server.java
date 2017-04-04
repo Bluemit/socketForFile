@@ -6,11 +6,15 @@ import sun.misc.*;
 
 public class Server {
     public static void main(String args[]) {
-        if (args.length < 1){
-			System.out.println("port not set");
-			return;
+        int port = 18900;
+		if (args.length < 1){
+			System.out.println("Notice: you don't set port");
+			System.out.println("we will use default value");
+			System.out.println("port: 18900");
 		}
-		int port = Integer.valueOf(args[0]);
+		else {
+			port = Integer.valueOf(args[0]);
+		}
 		new AcceptThread(port).start();
     }
 }
@@ -52,13 +56,12 @@ class ReadThread extends Thread {
 
             try {
                 BufferedReader is = new BufferedReader(new InputStreamReader(mmSocket.getInputStream()));
-				PrintWriter os = new PrintWriter(mmSocket.getOutputStream());
 
                 String line = is.readLine();
                 while (true){
 					if (line.equals("ask")) {
 						System.out.println("Client: " + line);
-						new WriteThread(mmSocket, os).start();
+						new WriteThread(mmSocket).start();
 					}
 					line = is.readLine();
 					while(line == null){
@@ -85,25 +88,20 @@ class ReadThread extends Thread {
 
 class WriteThread extends Thread {
     private Socket mmSocket;
-	private PrintWriter mos;
     static BASE64Encoder encoder = new sun.misc.BASE64Encoder();
 
-    WriteThread(Socket i, PrintWriter os) {
+    WriteThread(Socket i) {
         mmSocket = i;
-		mos = os;
     }
 
     public void run() {
             try {
-                // SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                // os.println(df.format(new Date()));
-                // os.flush();
-
-                File file = new File("1.pdf");
+                File file = new File("sample.pdf");
                 String result = getBinary(file);
                 System.out.println("start send file...");
-                mos.println(result);
-                mos.flush();
+				PrintWriter os = new PrintWriter(mmSocket.getOutputStream());
+                os.println(result);
+                os.flush();
                 Thread.sleep(5000);
             } catch (Exception e) {
                 e.printStackTrace();
