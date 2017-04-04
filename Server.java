@@ -6,16 +6,21 @@ import sun.misc.*;
 
 public class Server {
     public static void main(String args[]) {
-        new AcceptThread().start();
+        if (args.length < 1){
+			System.out.println("port not set");
+			return;
+		}
+		int port = Integer.valueOf(args[0]);
+		new AcceptThread(port).start();
     }
 }
 
 class AcceptThread extends Thread {
     private ServerSocket mServerSocket;
     private Socket mSocket;
-    public AcceptThread() {
+    public AcceptThread(int port) {
         try {
-            mServerSocket = new ServerSocket(30000);
+            mServerSocket = new ServerSocket(port);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -28,9 +33,7 @@ class AcceptThread extends Thread {
             try {
                 mSocket = mServerSocket.accept();
                 System.out.println("Thread " + ++i);
-                Runnable r = new ReadThread(mSocket);
-                new Thread(r).start();
-                new WriteThread(mSocket).start();
+                new ReadThread(mSocket).start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -38,7 +41,7 @@ class AcceptThread extends Thread {
     }
 }
 
-class ReadThread implements Runnable {
+class ReadThread extends Thread {
     private Socket mmSocket;
 
     ReadThread(Socket i) {
@@ -49,58 +52,66 @@ class ReadThread implements Runnable {
 
             try {
                 BufferedReader is = new BufferedReader(new InputStreamReader(mmSocket.getInputStream()));
+				PrintWriter os = new PrintWriter(mmSocket.getOutputStream());
 
                 String line = is.readLine();
-                while (!line.equals("exit")) {
-                    System.out.println("Client: " + line);
-                    line = is.readLine();
-                }
-            } catch (Exception e) {
-            e.printStackTrace();
+                while (true){
+					if (line.equals("ask")) {
+						System.out.println("Client: " + line);
+						new WriteThread(mmSocket, os).start();
+					}
+					line = is.readLine();
+					while(line == null){
+						sleep(1000);
+						System.out.println("line is null");
+						line = is.readLine();
+					}
+				}
+            }
+			catch (Exception e) {
+				e.printStackTrace();
             }
             finally {
-System.out.println("Exit Server ReadData");
+				System.out.println("Exit Server ReadData");
                 try {
                 mmSocket.close();
-            }
+				}
                 catch (IOException e) {
-            e.printStackTrace();
-            }
+					e.printStackTrace();
+				}
             }
     }
 }
 
 class WriteThread extends Thread {
     private Socket mmSocket;
+	private PrintWriter mos;
     static BASE64Encoder encoder = new sun.misc.BASE64Encoder();
 
-    WriteThread(Socket i) {
+    WriteThread(Socket i, PrintWriter os) {
         mmSocket = i;
+		mos = os;
     }
 
     public void run() {
-        while (true) {
             try {
-                PrintWriter os = new PrintWriter(mmSocket.getOutputStream());
                 // SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 // os.println(df.format(new Date()));
                 // os.flush();
 
                 File file = new File("1.pdf");
-                String result = getPDFBinary(file);
-                System.out.println(result);
-                os.println(result);
-                os.flush();
-                Thread.sleep(10000);
+                String result = getBinary(file);
+                System.out.println("start send file...");
+                mos.println(result);
+                mos.flush();
+                Thread.sleep(5000);
             } catch (Exception e) {
                 e.printStackTrace();
-                break;
             }
-        }
         System.out.println("Exit Server WriteData");
     }
 
-    static String getPDFBinary(File file) {
+    static String getBinary(File file) {
         FileInputStream fin =null;
         BufferedInputStream bin =null;
         ByteArrayOutputStream baos = null;
@@ -127,27 +138,26 @@ class WriteThread extends Thread {
              return encoder.encodeBuffer(bytes).trim();
 
 
-        } catch (FileNotFoundException e) {
+        }
+		catch (FileNotFoundException e) {
             e.printStackTrace();
-        } catch (IOException e) {
+        }
+		catch (IOException e) {
             e.printStackTrace();
-        }finally{
+        }
+		finally{
             try {
                 fin.close();
                 bin.close();
 
-                //baos.close();
+                baos.close();
                 bout.close();
-            } catch (IOException e) {
+            } 
+			catch (IOException e) {
                 e.printStackTrace();
             }
         }
         return null;
     }
-
-
-
-
-
 
 }
