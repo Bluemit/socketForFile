@@ -16,6 +16,7 @@ public class Server {
 			port = Integer.valueOf(args[0]);
 		}
 		new AcceptThread(port).start();
+		System.out.println("server starts at port "+ port);
     }
 }
 
@@ -63,10 +64,12 @@ class ReadThread extends Thread {
 						System.out.println("Client: " + line);
 						new WriteThread(mmSocket).start();
 					}
+					else if(line.equals("exit")){
+						break;
+					}
 					line = is.readLine();
 					while(line == null){
 						sleep(1000);
-						System.out.println("line is null");
 						line = is.readLine();
 					}
 				}
@@ -77,7 +80,7 @@ class ReadThread extends Thread {
             finally {
 				System.out.println("Exit Server ReadData");
                 try {
-                mmSocket.close();
+					mmSocket.close();
 				}
                 catch (IOException e) {
 					e.printStackTrace();
@@ -96,17 +99,16 @@ class WriteThread extends Thread {
 
     public void run() {
             try {
-                File file = new File("sample.pdf");
+                File file = new File("source.pdf");
                 String result = getBinary(file);
                 System.out.println("start send file...");
 				PrintWriter os = new PrintWriter(mmSocket.getOutputStream());
                 os.println(result);
                 os.flush();
-                Thread.sleep(5000);
+                System.out.println("finish send file!");
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        System.out.println("Exit Server WriteData");
     }
 
     static String getBinary(File file) {
@@ -131,9 +133,9 @@ class WriteThread extends Thread {
             }
 
             bout.flush();
-             byte[] bytes = baos.toByteArray();
+            byte[] bytes = baos.toByteArray();
 
-             return encoder.encodeBuffer(bytes).trim();
+            return encoder.encodeBuffer(bytes).trim();
 
 
         }

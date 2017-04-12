@@ -43,6 +43,7 @@ class WriteData extends Thread {
 						os.flush();
 					}
                     line = in.readLine();
+					lineargs = line.split(" ");
                 }
                 os.close();
 				mSocket.close();
@@ -81,13 +82,12 @@ class ReadData extends Thread {
 				FileOutputStream fos = new FileOutputStream(file);
 				char [] allChar = new char[20000000];
 				int len = is.read(allChar);
-				System.out.println(len + " chars!");
+				System.out.println("input file stream char size: " + len);
 				String allLine = new String (allChar, 0, len);
-				System.out.println(allLine.length() + " long strings!");
 				int cnt = 0;
 
 				base64StringToPDF(allLine, file);
-				System.out.println("write ok");
+				System.out.println("finish write file: " + mFilepath);
 				fos.close();
 				is.close();
 				sleep(5000);
@@ -95,7 +95,6 @@ class ReadData extends Thread {
 		catch (Exception e) {
             e.printStackTrace();
         } finally {
-            System.out.println("Exit Client ReadData");
         }
 	}
 
